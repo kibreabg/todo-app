@@ -27,5 +27,15 @@ public sealed class TodoConfiguration : IEntityTypeConfiguration<Todo>
 
         builder.Property(todo => todo.UpdatedAt)
             .IsRequired();
+
+        builder.Property(todo => todo.UserId)
+            .HasMaxLength(450);
+
+        builder.HasOne(todo => todo.User)
+            .WithMany()
+            .HasForeignKey(todo => todo.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasIndex(todo => todo.UserId);
     }
 }

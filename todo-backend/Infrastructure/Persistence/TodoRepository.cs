@@ -6,17 +6,19 @@ namespace todo_backend.Infrastructure.Persistence;
 
 public sealed class TodoRepository(AppDbContext dbContext) : ITodoRepository
 {
-    public async Task<IReadOnlyList<Todo>> GetAllAsync(CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<Todo>> GetAllAsync(string userId, CancellationToken cancellationToken = default)
     {
         return await dbContext.Todos
             .AsNoTracking()
+            .Where(todo => todo.UserId == userId)
             .OrderByDescending(todo => todo.CreatedAt)
             .ToListAsync(cancellationToken);
     }
 
-    public async Task<Todo?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    public async Task<Todo?> GetByIdAsync(Guid id, string userId, CancellationToken cancellationToken = default)
     {
-        return await dbContext.Todos.FindAsync([id], cancellationToken);
+        return await dbContext.Todos
+            .FirstOrDefaultAsync(todo => todo.Id == id && todo.UserId == userId, cancellationToken);
     }
 
     public async Task AddAsync(Todo todo, CancellationToken cancellationToken = default)
@@ -31,9 +33,10 @@ public sealed class TodoRepository(AppDbContext dbContext) : ITodoRepository
         await dbContext.SaveChangesAsync(cancellationToken);
     }
 
-    public async Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default)
+    public async Task<bool> DeleteAsync(Guid id, string userId, CancellationToken cancellationToken = default)
     {
-        var todo = await dbContext.Todos.FindAsync([id], cancellationToken);
+        var todo = await dbContext.Todos
+            .FirstOrDefaultAsync(item => item.Id == id && item.UserId == userId, cancellationToken);
         if (todo is null)
         {
             return false;

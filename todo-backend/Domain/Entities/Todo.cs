@@ -12,11 +12,15 @@ public sealed class Todo
 
     public DateTimeOffset UpdatedAt { get; private set; }
 
+    public string? UserId { get; private set; }
+
+    public ApplicationUser? User { get; private set; }
+
     private Todo()
     {
     }
 
-    public Todo(string title, bool completed = false)
+    public Todo(string title, bool completed = false, string? userId = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(title);
 
@@ -25,6 +29,7 @@ public sealed class Todo
         Id = Guid.NewGuid();
         Title = title.Trim();
         Completed = completed;
+        UserId = userId;
         CreatedAt = nowUtc;
         UpdatedAt = nowUtc;
     }

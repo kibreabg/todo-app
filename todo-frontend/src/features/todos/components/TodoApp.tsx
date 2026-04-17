@@ -10,12 +10,15 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
+import { AuthPanel } from "@/features/auth/components/AuthPanel";
+import { useAuth } from "@/features/auth/hooks/useAuth";
 import type { Todo } from "@/features/todos/lib/types";
 import { useTodos } from "@/features/todos/hooks/useTodos";
 import { TodoForm } from "./TodoForm";
 import { TodoList } from "./TodoList";
 
 export function TodoApp() {
+  const auth = useAuth();
   const {
     todos,
     isLoading,
@@ -26,7 +29,7 @@ export function TodoApp() {
     addTodo,
     editTodo,
     removeTodo,
-  } = useTodos();
+  } = useTodos({ enabled: Boolean(auth.user) });
 
   const handleToggle = async (todo: Todo) => {
     await editTodo(todo.id, {
@@ -41,6 +44,20 @@ export function TodoApp() {
       completed: todo.completed,
     });
   };
+
+  const authError = auth.error;
+
+  if (auth.isLoading) {
+    return (
+      <Container maxWidth="sm" sx={{ py: { xs: 5, md: 8 } }}>
+        <Paper variant="outlined" sx={{ p: 4, borderRadius: 3, textAlign: "center" }}>
+          <Typography variant="body2" color="text.secondary">
+            Loading session...
+          </Typography>
+        </Paper>
+      </Container>
+    );
+  }
 
   return (
     <Container maxWidth="md" sx={{ py: { xs: 5, md: 8 } }}>
@@ -89,6 +106,26 @@ export function TodoApp() {
             Organize your tasks with a simple CRUD workflow built for production.
           </Typography>
 
+          {auth.user && (
+            <Stack
+              direction={{ xs: "column", sm: "row" }}
+              spacing={1}
+              sx={{ mt: 2, alignItems: { xs: "flex-start", sm: "center" } }}
+            >
+              <Chip label={`Signed in as ${auth.user.userName || auth.user.email}`} />
+              <Button
+                size="small"
+                variant="outlined"
+                onClick={() => {
+                  void auth.logout();
+                }}
+                disabled={auth.isSubmitting}
+              >
+                Sign out
+              </Button>
+            </Stack>
+          )}
+
           <Stack direction="row" spacing={1} sx={{ mt: 2.5, flexWrap: "wrap", gap: 1 }}>
             <Chip label={`Total: ${counts.total}`} />
             <Chip label={`Pending: ${counts.pending}`} />
@@ -96,50 +133,61 @@ export function TodoApp() {
           </Stack>
         </Paper>
 
-        <TodoForm isSaving={isSaving} onSubmit={addTodo} />
+        {!auth.user ? (
+          <AuthPanel
+            isSubmitting={auth.isSubmitting}
+            error={authError}
+            onLogin={auth.login}
+            onRegister={auth.register}
+          />
+        ) : (
+          <>
+            <TodoForm isSaving={isSaving || auth.isSubmitting} onSubmit={addTodo} />
 
-        {error && (
-          <Alert
-            severity="error"
-            action={
-              <Button
-                color="inherit"
-                size="small"
-                onClick={() => {
-                  loadTodos().catch(() => undefined);
+            {error && (
+              <Alert
+                severity="error"
+                action={
+                  <Button
+                    color="inherit"
+                    size="small"
+                    onClick={() => {
+                      loadTodos().catch(() => undefined);
+                    }}
+                  >
+                    Retry
+                  </Button>
+                }
+              >
+                {error}
+              </Alert>
+            )}
+
+            {isLoading ? (
+              <Paper
+                variant="outlined"
+                sx={{
+                  px: 3,
+                  py: 5,
+                  textAlign: "center",
+                  borderRadius: 3,
+                  borderColor: "var(--line)",
                 }}
               >
-                Retry
-              </Button>
-            }
-          >
-            {error}
-          </Alert>
-        )}
-
-        {isLoading ? (
-          <Paper
-            variant="outlined"
-            sx={{
-              px: 3,
-              py: 5,
-              textAlign: "center",
-              borderRadius: 3,
-              borderColor: "var(--line)",
-            }}
-          >
-            <Typography variant="body2" color="text.secondary">
-              Loading todos...
-            </Typography>
-          </Paper>
-        ) : (
-          <TodoList
-            todos={todos}
-            isSaving={isSaving}
-            onToggle={handleToggle}
-            onEdit={handleEdit}
-            onDelete={removeTodo}
-          />
+                <Typography variant="body2" color="text.secondary">
+                  Loading todos...
+                </Typography>
+              </Paper>
+            ) : (
+              <TodoList
+                todos={todos}
+                isSaving={isSaving || auth.isSubmitting}
+                onToggle={handleToggle}
+                onEdit={handleEdit}
+                onDelete={removeTodo}
+              />
+            )}
+          </>
         )}
       </Stack>
     </Container>

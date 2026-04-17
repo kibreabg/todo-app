@@ -9,6 +9,10 @@ import {
 } from "@/features/todos/lib/api";
 import type { Todo } from "@/features/todos/lib/types";
 
+type UseTodosOptions = {
+  enabled?: boolean;
+};
+
 function sortTodos(todos: Todo[]): Todo[] {
   return [...todos].sort(
     (a, b) =>
@@ -16,13 +20,21 @@ function sortTodos(todos: Todo[]): Todo[] {
   );
 }
 
-export function useTodos() {
+export function useTodos(options: UseTodosOptions = {}) {
+  const { enabled = true } = options;
   const [todos, setTodos] = useState<Todo[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const loadTodos = useCallback(async (showLoading = true) => {
+    if (!enabled) {
+      setTodos([]);
+      setError(null);
+      setIsLoading(false);
+      return;
+    }
+
     if (showLoading) {
       setIsLoading(true);
     }
@@ -38,15 +50,26 @@ export function useTodos() {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [enabled]);
 
   useEffect(() => {
+    if (!enabled) {
+      setTodos([]);
+      setError(null);
+      setIsLoading(false);
+      return;
+    }
+
     // Initial data hydration on mount.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     void loadTodos(false);
-  }, [loadTodos]);
+  }, [enabled, loadTodos]);
 
   const addTodo = useCallback(async (title: string) => {
+    if (!enabled) {
+      throw new Error("Authentication required.");
+    }
+
     setIsSaving(true);
     setError(null);
 
@@ -65,10 +88,14 @@ export function useTodos() {
     } finally {
       setIsSaving(false);
     }
-  }, []);
+  }, [enabled]);
 
   const editTodo = useCallback(
     async (id: string, updates: Pick<Todo, "title" | "completed">) => {
+      if (!enabled) {
+        throw new Error("Authentication required.");
+      }
+
       setIsSaving(true);
       setError(null);
 
@@ -92,10 +119,14 @@ export function useTodos() {
         setIsSaving(false);
       }
     },
-    [],
+    [enabled],
   );
 
   const removeTodo = useCallback(async (id: string) => {
+    if (!enabled) {
+      throw new Error("Authentication required.");
+    }
+
     setIsSaving(true);
     setError(null);
 
@@ -112,7 +143,7 @@ export function useTodos() {
     } finally {
       setIsSaving(false);
     }
-  }, []);
+  }, [enabled]);
 
   const counts = useMemo(() => {
     const completed = todos.filter((item) => item.completed).length;

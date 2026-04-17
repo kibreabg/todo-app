@@ -5,29 +5,29 @@ namespace todo_backend.Application.Todos;
 
 public sealed class TodoService(ITodoRepository todoRepository) : ITodoService
 {
-    public async Task<IReadOnlyList<TodoDto>> GetAllAsync(CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<TodoDto>> GetAllAsync(string userId, CancellationToken cancellationToken = default)
     {
-        var todos = await todoRepository.GetAllAsync(cancellationToken);
+        var todos = await todoRepository.GetAllAsync(userId, cancellationToken);
         return todos.Select(Map).ToList();
     }
 
-    public async Task<TodoDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    public async Task<TodoDto?> GetByIdAsync(Guid id, string userId, CancellationToken cancellationToken = default)
     {
-        var todo = await todoRepository.GetByIdAsync(id, cancellationToken);
+        var todo = await todoRepository.GetByIdAsync(id, userId, cancellationToken);
         return todo is null ? null : Map(todo);
     }
 
-    public async Task<TodoDto> CreateAsync(string title, bool completed = false, CancellationToken cancellationToken = default)
+    public async Task<TodoDto> CreateAsync(string title, string userId, bool completed = false, CancellationToken cancellationToken = default)
     {
-        var todo = new Todo(title, completed);
+        var todo = new Todo(title, completed, userId);
 
         await todoRepository.AddAsync(todo, cancellationToken);
         return Map(todo);
     }
 
-    public async Task<TodoDto?> UpdateAsync(Guid id, string title, bool completed, CancellationToken cancellationToken = default)
+    public async Task<TodoDto?> UpdateAsync(Guid id, string title, bool completed, string userId, CancellationToken cancellationToken = default)
     {
-        var todo = await todoRepository.GetByIdAsync(id, cancellationToken);
+        var todo = await todoRepository.GetByIdAsync(id, userId, cancellationToken);
         if (todo is null)
         {
             return null;
@@ -39,9 +39,9 @@ public sealed class TodoService(ITodoRepository todoRepository) : ITodoService
         return Map(todo);
     }
 
-    public async Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default)
+    public async Task<bool> DeleteAsync(Guid id, string userId, CancellationToken cancellationToken = default)
     {
-        return await todoRepository.DeleteAsync(id, cancellationToken);
+        return await todoRepository.DeleteAsync(id, userId, cancellationToken);
     }
 
     private static TodoDto Map(Todo todo)
