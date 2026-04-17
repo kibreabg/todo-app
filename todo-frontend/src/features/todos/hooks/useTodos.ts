@@ -1,0 +1,138 @@
+"use client";
+
+import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  createTodo as createTodoRequest,
+  deleteTodo as deleteTodoRequest,
+  listTodos,
+  updateTodo as updateTodoRequest,
+} from "@/features/todos/lib/api";
+import type { Todo } from "@/features/todos/lib/types";
+
+function sortTodos(todos: Todo[]): Todo[] {
+  return [...todos].sort(
+    (a, b) =>
+      new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime(),
+  );
+}
+
+export function useTodos() {
+  const [todos, setTodos] = useState<Todo[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadTodos = useCallback(async (showLoading = true) => {
+    if (showLoading) {
+      setIsLoading(true);
+    }
+
+    try {
+      const items = await listTodos();
+      setTodos(sortTodos(items));
+      setError(null);
+    } catch (loadError) {
+      const message =
+        loadError instanceof Error ? loadError.message : "Failed to load todos.";
+      setError(message);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    // Initial data hydration on mount.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    void loadTodos(false);
+  }, [loadTodos]);
+
+  const addTodo = useCallback(async (title: string) => {
+    setIsSaving(true);
+    setError(null);
+
+    try {
+      const created = await createTodoRequest({
+        title,
+        completed: false,
+      });
+
+      setTodos((prev) => sortTodos([created, ...prev]));
+    } catch (createError) {
+      const message =
+        createError instanceof Error ? createError.message : "Failed to add todo.";
+      setError(message);
+      throw createError;
+    } finally {
+      setIsSaving(false);
+    }
+  }, []);
+
+  const editTodo = useCallback(
+    async (id: string, updates: Pick<Todo, "title" | "completed">) => {
+      setIsSaving(true);
+      setError(null);
+
+      try {
+        const updated = await updateTodoRequest(id, {
+          title: updates.title,
+          completed: updates.completed,
+        });
+
+        setTodos((prev) =>
+          sortTodos(prev.map((item) => (item.id === id ? updated : item))),
+        );
+      } catch (updateError) {
+        const message =
+          updateError instanceof Error
+            ? updateError.message
+            : "Failed to update todo.";
+        setError(message);
+        throw updateError;
+      } finally {
+        setIsSaving(false);
+      }
+    },
+    [],
+  );
+
+  const removeTodo = useCallback(async (id: string) => {
+    setIsSaving(true);
+    setError(null);
+
+    try {
+      await deleteTodoRequest(id);
+      setTodos((prev) => prev.filter((item) => item.id !== id));
+    } catch (deleteError) {
+      const message =
+        deleteError instanceof Error
+          ? deleteError.message
+          : "Failed to delete todo.";
+      setError(message);
+      throw deleteError;
+    } finally {
+      setIsSaving(false);
+    }
+  }, []);
+
+  const counts = useMemo(() => {
+    const completed = todos.filter((item) => item.completed).length;
+
+    return {
+      total: todos.length,
+      completed,
+      pending: todos.length - completed,
+    };
+  }, [todos]);
+
+  return {
+    todos,
+    isLoading,
+    isSaving,
+    error,
+    counts,
+    loadTodos,
+    addTodo,
+    editTodo,
+    removeTodo,
+  };
+}

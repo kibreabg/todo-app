@@ -1,0 +1,26 @@
+@todo_backend_HostAddress = http://localhost:5284
+
+GET {{todo_backend_HostAddress}}/api/todos/
+Accept: application/json
+
+###
+
+POST {{todo_backend_HostAddress}}/api/todos/
+Content-Type: application/json
+
+{
+	"title": "Ship clean architecture backend",
+	"completed": false
+}
+
+###
+
+PUT {{todo_backend_HostAddress}}/api/todos/{{todoId}}
+Content-Type: application/json
+
+{
+	"title": "Ship clean architecture backend",
+	"completed": true
+}
+
+###

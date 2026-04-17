@@ -1,0 +1,37 @@
+:root {
+  --bg: #f8fafc;
+  --bg-soft: #f1f5f9;
+  --text: #0f172a;
+  --line: #dbe3ee;
+  --accent: #ea580c;
+  --accent-strong: #c2410c;
+}
+
+@theme inline {
+  --color-background: var(--bg);
+  --color-foreground: var(--text);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  min-height: 100%;
+  margin: 0;
+  background:
+    radial-gradient(circle at 15% 0%, #ffe7d6 0%, transparent 40%),
+    radial-gradient(circle at 95% 100%, #dff8f2 0%, transparent 35%),
+    var(--bg);
+  color: var(--text);
+  font-family: var(--font-geist-sans), "Segoe UI", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+html {
+  height: 100%;
+}
+
+.app-body {
+  display: flex;
+  flex-direction: column;
+}
