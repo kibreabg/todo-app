@@ -1,23 +1,22 @@
-import { NextResponse } from "next/server";
 import {
   buildProxyHeaders,
   getBackendBaseUrl,
+  toProxyConnectionErrorResponse,
   toNextResponse,
 } from "@/app/api/_lib/backendProxy";
 
 export async function POST(request: Request) {
+  const targetUrl = `${getBackendBaseUrl()}/api/auth/logout`;
+
   try {
-    const response = await fetch(`${getBackendBaseUrl()}/api/auth/logout`, {
+    const response = await fetch(targetUrl, {
       method: "POST",
       headers: buildProxyHeaders(request),
       cache: "no-store",
     });
 
     return toNextResponse(response);
-  } catch {
-    return NextResponse.json(
-      { error: "Unable to connect to backend API." },
-      { status: 502 },
-    );
+  } catch (error) {
+    return toProxyConnectionErrorResponse(targetUrl, error);
   }
 }

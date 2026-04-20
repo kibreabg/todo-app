@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import {
   buildProxyHeaders,
   getBackendBaseUrl,
+  toProxyConnectionErrorResponse,
   toNextResponse,
 } from "@/app/api/_lib/backendProxy";
 
@@ -13,6 +14,7 @@ type RouteContext = {
 
 export async function PUT(request: Request, context: RouteContext) {
   const { id } = await context.params;
+  const targetUrl = `${getBackendBaseUrl()}/api/todos/${id}`;
 
   const payload = (await request.json()) as {
     title?: unknown;
@@ -29,7 +31,7 @@ export async function PUT(request: Request, context: RouteContext) {
   }
 
   try {
-    const response = await fetch(`${getBackendBaseUrl()}/api/todos/${id}`, {
+    const response = await fetch(targetUrl, {
       method: "PUT",
       headers: buildProxyHeaders(request, true),
       body: JSON.stringify({
@@ -39,19 +41,17 @@ export async function PUT(request: Request, context: RouteContext) {
     });
 
     return toNextResponse(response);
-  } catch {
-    return NextResponse.json(
-      { error: "Unable to connect to backend API." },
-      { status: 502 },
-    );
+  } catch (error) {
+    return toProxyConnectionErrorResponse(targetUrl, error);
   }
 }
 
 export async function DELETE(request: Request, context: RouteContext) {
   const { id } = await context.params;
+  const targetUrl = `${getBackendBaseUrl()}/api/todos/${id}`;
 
   try {
-    const response = await fetch(`${getBackendBaseUrl()}/api/todos/${id}`, {
+    const response = await fetch(targetUrl, {
       method: "DELETE",
       headers: buildProxyHeaders(request, false),
     });
@@ -61,10 +61,7 @@ export async function DELETE(request: Request, context: RouteContext) {
     }
 
     return toNextResponse(response);
-  } catch {
-    return NextResponse.json(
-      { error: "Unable to connect to backend API." },
-      { status: 502 },
-    );
+  } catch (error) {
+    return toProxyConnectionErrorResponse(targetUrl, error);
   }
 }

@@ -23,6 +23,46 @@ export function buildProxyHeaders(request: Request, includeJsonContentType = fal
   return headers;
 }
 
+type ProxyErrorDetails = {
+  name?: string;
+  message?: string;
+  code?: string;
+};
+
+function getProxyErrorDetails(error: unknown): ProxyErrorDetails {
+  if (!(error instanceof Error)) {
+    return {
+      message: "Unknown proxy error.",
+    };
+  }
+
+  const errorWithCode = error as Error & { code?: string };
+
+  return {
+    name: error.name,
+    message: error.message,
+    code: typeof errorWithCode.code === "string" ? errorWithCode.code : undefined,
+  };
+}
+
+export function toProxyConnectionErrorResponse(targetUrl: string, error: unknown): NextResponse {
+  const details = getProxyErrorDetails(error);
+
+  return NextResponse.json(
+    {
+      error: "Unable to connect to backend API.",
+      targetUrl,
+      details,
+      hints: [
+        "Ensure the backend is running and listening on BACKEND_API_URL.",
+        "Ensure frontend BACKEND_API_URL uses the same protocol/port as the running backend.",
+        "Check for port conflicts from duplicate backend processes.",
+      ],
+    },
+    { status: 502 },
+  );
+}
+
 export async function toNextResponse(response: Response): Promise<NextResponse> {
   const contentType = response.headers.get("content-type") ?? "";
 
