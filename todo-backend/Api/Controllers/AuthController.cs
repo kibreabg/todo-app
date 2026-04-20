@@ -58,16 +58,18 @@ public sealed class AuthController(
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<ActionResult<AuthResponse>> Login([FromBody] LoginRequest request, CancellationToken cancellationToken)
     {
+        const string invalidCredentialsMessage = "Invalid email or password.";
+
         var user = await userManager.FindByEmailAsync(request.Email);
         if (user is null)
         {
-            return Unauthorized();
+            return Unauthorized(invalidCredentialsMessage);
         }
 
         var passwordCheckResult = await signInManager.CheckPasswordSignInAsync(user, request.Password, lockoutOnFailure: true);
         if (!passwordCheckResult.Succeeded)
         {
-            return Unauthorized();
+            return Unauthorized(invalidCredentialsMessage);
         }
 
         return Ok(await CreateAndSetAuthCookiesAsync(user, cancellationToken));

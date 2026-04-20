@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import {
   Alert,
   Box,
@@ -7,6 +8,7 @@ import {
   Chip,
   Container,
   Paper,
+  Snackbar,
   Stack,
   Typography,
 } from "@mui/material";
@@ -46,6 +48,13 @@ export function TodoApp() {
   };
 
   const authError = auth.error;
+  const [isAuthNotificationOpen, setIsAuthNotificationOpen] = useState(false);
+
+  useEffect(() => {
+    if (authError) {
+      setIsAuthNotificationOpen(true);
+    }
+  }, [authError]);
 
   if (auth.isLoading) {
     return (
@@ -117,7 +126,7 @@ export function TodoApp() {
                 size="small"
                 variant="outlined"
                 onClick={() => {
-                  void auth.logout();
+                  void auth.logout().catch(() => undefined);
                 }}
                 disabled={auth.isSubmitting}
               >
@@ -133,14 +142,7 @@ export function TodoApp() {
           </Stack>
         </Paper>
 
-        {!auth.user ? (
-          <AuthPanel
-            isSubmitting={auth.isSubmitting}
-            error={authError}
-            onLogin={auth.login}
-            onRegister={auth.register}
-          />
-        ) : (
+        {auth.user ? (
           <>
             <TodoForm isSaving={isSaving || auth.isSubmitting} onSubmit={addTodo} />
 
@@ -188,7 +190,36 @@ export function TodoApp() {
               />
             )}
           </>
+        ) : (
+          <AuthPanel
+            isSubmitting={auth.isSubmitting}
+            error={authError}
+            onLogin={auth.login}
+            onRegister={auth.register}
+          />
         )}
+
+        <Snackbar
+          open={Boolean(auth.user) && isAuthNotificationOpen && Boolean(authError)}
+          autoHideDuration={6000}
+          onClose={(_, reason) => {
+            if (reason === "clickaway") {
+              return;
+            }
+
+            setIsAuthNotificationOpen(false);
+          }}
+          anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+        >
+          <Alert
+            onClose={() => setIsAuthNotificationOpen(false)}
+            severity="error"
+            variant="filled"
+            sx={{ width: "100%" }}
+          >
+            {authError}
+          </Alert>
+        </Snackbar>
       </Stack>
     </Container>
   );

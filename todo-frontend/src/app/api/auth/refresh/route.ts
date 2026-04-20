@@ -13,6 +13,28 @@ export async function POST(request: Request) {
       cache: "no-store",
     });
 
+    const isExpectedUnauthorized = request.headers.get("x-expected-401") === "1";
+    if (isExpectedUnauthorized && response.status === 401) {
+      const suppressed = new NextResponse(null, { status: 204 });
+      const anyHeaders = response.headers as unknown as {
+        getSetCookie?: () => string[];
+      };
+      const setCookies = anyHeaders.getSetCookie?.() ?? [];
+
+      if (setCookies.length > 0) {
+        for (const cookie of setCookies) {
+          suppressed.headers.append("set-cookie", cookie);
+        }
+      } else {
+        const combinedSetCookie = response.headers.get("set-cookie");
+        if (combinedSetCookie) {
+          suppressed.headers.append("set-cookie", combinedSetCookie);
+        }
+      }
+
+      return suppressed;
+    }
+
     return toNextResponse(response);
   } catch {
     return NextResponse.json(

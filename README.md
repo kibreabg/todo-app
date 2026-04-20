@@ -19,6 +19,8 @@ npm install
 npm run dev
 ```
 
+Use `npm run dev` for local debugging. This runs the development build with full React/Next diagnostics.
+
 Frontend runs on:
 
 - http://localhost:3000
@@ -31,6 +33,8 @@ npm install
 npm run build
 npm run start
 ```
+
+`npm run start` serves the production build. Avoid this command while debugging local issues.
 
 ## Run The Backend (.NET Web API)
 
