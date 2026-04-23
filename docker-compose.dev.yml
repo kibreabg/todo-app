@@ -1,0 +1,67 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: todo_app
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5433:5432"
+    volumes:
+      - todo_app_postgres_data_dev:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d todo_app"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./todo-backend
+      target: dev
+    restart: unless-stopped
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__TodoDatabase: Host=postgres;Port=5432;Database=todo_app;Username=postgres;Password=postgres
+      Jwt__Issuer: todo-backend
+      Jwt__Audience: todo-frontend
+      Jwt__SigningKey: dev_only_replace_this_with_a_long_random_secret_32_plus_chars
+      Jwt__AccessTokenLifetimeMinutes: "15"
+      Jwt__RefreshTokenLifetimeDays: "14"
+      Jwt__AccessTokenCookieName: todo_auth
+      Jwt__RefreshTokenCookieName: todo_refresh
+    ports:
+      - "5284:8080"
+    volumes:
+      - ./todo-backend:/src
+      - backend_bin_dev:/src/bin
+      - backend_obj_dev:/src/obj
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./todo-frontend
+      target: dev
+    restart: unless-stopped
+    environment:
+      BACKEND_API_URL: http://backend:8080
+      NEXT_TELEMETRY_DISABLED: "1"
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./todo-frontend:/app
+      - frontend_node_modules_dev:/app/node_modules
+      - frontend_next_dev:/app/.next
+    depends_on:
+      - backend
+
+volumes:
+  todo_app_postgres_data_dev:
+  backend_bin_dev:
+  backend_obj_dev:
+  frontend_node_modules_dev:
+  frontend_next_dev:

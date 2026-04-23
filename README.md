@@ -5,6 +5,87 @@ This repository contains:
 - `todo-frontend`: Next.js frontend
 - `todo-backend`: ASP.NET Core Web API backend
 
+## Containerization
+
+This repo now includes:
+
+- `todo-frontend/Dockerfile` (dev + production stages)
+- `todo-backend/Dockerfile` (dev + production stages)
+- `docker-compose.dev.yml` for local development in containers
+- `docker-compose.prod.yml` for production-style container runs
+
+### Exact Port And Route Mapping
+
+| Flow | Host address | Container/internal address |
+| --- | --- | --- |
+| Browser -> Frontend | `http://localhost:3000` | `frontend:3000` |
+| Frontend proxy -> Backend API | N/A (server-side in frontend container) | `http://backend:8080` |
+| Host direct -> Backend API | `http://localhost:5284` | `backend:8080` |
+| Backend -> Postgres | N/A | `postgres:5432` |
+| Host direct -> Postgres | `localhost:5433` | `postgres:5432` |
+
+### Environment Variable Mapping
+
+Frontend (`todo-frontend`):
+
+- `BACKEND_API_URL=http://backend:8080`
+- `NEXT_TELEMETRY_DISABLED=1`
+
+Backend (`todo-backend`):
+
+- `ASPNETCORE_URLS=http://+:8080`
+- `ASPNETCORE_ENVIRONMENT=Development` (dev compose)
+- `ASPNETCORE_ENVIRONMENT=Production` (prod compose)
+- `ConnectionStrings__TodoDatabase=Host=postgres;Port=5432;Database=todo_app;Username=postgres;Password=postgres` (dev default)
+- `ConnectionStrings__TodoDatabase=Host=postgres;Port=5432;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}` (prod compose pattern)
+- `Jwt__Issuer=todo-backend`
+- `Jwt__Audience=todo-frontend`
+- `Jwt__SigningKey=...` (must be at least 32 chars)
+- `Jwt__AccessTokenLifetimeMinutes=15`
+- `Jwt__RefreshTokenLifetimeDays=14`
+- `Jwt__AccessTokenCookieName=todo_auth`
+- `Jwt__RefreshTokenCookieName=todo_refresh`
+
+Postgres:
+
+- `POSTGRES_DB=todo_app`
+- `POSTGRES_USER=postgres`
+- `POSTGRES_PASSWORD=postgres`
+
+### Run Dev Stack In Containers
+
+```powershell
+docker compose -f docker-compose.dev.yml up --build
+```
+
+Then use:
+
+- Frontend: `http://localhost:3000`
+- Backend API: `http://localhost:5284`
+- Postgres: `localhost:5433`
+
+### Run Production-Style Stack Locally
+
+Set at least one secure variable before starting:
+
+```powershell
+$env:JWT_SIGNING_KEY="replace-with-a-long-random-secret-at-least-32-characters"
+```
+
+Or copy `.env.prod.example` to `.env` and adjust values before running compose.
+
+Then run:
+
+```powershell
+docker compose -f docker-compose.prod.yml up --build
+```
+
+The host ports remain the same for consistency:
+
+- Frontend: `http://localhost:3000`
+- Backend API: `http://localhost:5284`
+- Postgres: `localhost:5433`
+
 ## Prerequisites
 
 - Node.js 20+
