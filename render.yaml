@@ -1,10 +1,10 @@
 services:
   - type: web
     name: todo-api
-    runtime: dotnet
+    runtime: docker
     rootDir: todo-backend
-    buildCommand: dotnet restore && dotnet publish -c Release -o ./out
-    startCommand: dotnet ./out/todo-backend.dll --urls http://0.0.0.0:$PORT
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
     healthCheckPath: /healthz
     autoDeploy: true
     envVars:
