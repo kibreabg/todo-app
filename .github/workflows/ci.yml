@@ -37,11 +37,8 @@ jobs:
         run: npm run build
 
   backend:
-    name: Backend Build
+    name: Backend Build And Tests
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: todo-backend
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -51,8 +48,11 @@ jobs:
         with:
           dotnet-version: 10.0.x
 
-      - name: Restore backend
-        run: dotnet restore
+      - name: Restore solution
+        run: dotnet restore todo-app.sln
 
       - name: Build backend
-        run: dotnet build --configuration Release --no-restore
+        run: dotnet build todo-backend/todo-backend.csproj --configuration Release --no-restore
+
+      - name: Test backend with coverage
+        run: dotnet test todo-app.sln --configuration Release --no-build --collect:"XPlat Code Coverage" --results-directory ./TestResults

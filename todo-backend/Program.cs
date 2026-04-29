@@ -34,6 +34,11 @@ app.UseAuthorization();
 app.MapGet("/healthz", () => Results.Ok(new { status = "ok" }));
 app.MapControllers();
 
-await app.Services.InitializeDatabaseAsync();
+if (!app.Environment.IsEnvironment("Testing"))
+{
+    await app.Services.InitializeDatabaseAsync();
+}
 
 await app.RunAsync();
+
+public partial class Program;
