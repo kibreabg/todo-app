@@ -13,6 +13,7 @@ concurrency:
 jobs:
   deploy-vercel:
     name: Deploy Frontend To Vercel
+    environment: Production
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -46,6 +47,7 @@ jobs:
 
   deploy-render:
     name: Deploy Backend To Render
+    environment: Production
     runs-on: ubuntu-latest
     steps:
       - name: Trigger Render deploy
