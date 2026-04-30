@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import {
   Alert,
   Box,
@@ -48,13 +47,7 @@ export function TodoApp() {
   };
 
   const authError = auth.error;
-  const [isAuthNotificationOpen, setIsAuthNotificationOpen] = useState(false);
-
-  useEffect(() => {
-    if (authError) {
-      setIsAuthNotificationOpen(true);
-    }
-  }, [authError]);
+  const isAuthNotificationOpen = true;
 
   if (auth.isLoading) {
     return (
@@ -206,13 +199,10 @@ export function TodoApp() {
             if (reason === "clickaway") {
               return;
             }
-
-            setIsAuthNotificationOpen(false);
           }}
           anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
         >
           <Alert
-            onClose={() => setIsAuthNotificationOpen(false)}
             severity="error"
             variant="filled"
             sx={{ width: "100%" }}

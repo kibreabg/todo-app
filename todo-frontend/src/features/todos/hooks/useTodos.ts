@@ -54,15 +54,17 @@ export function useTodos(options: UseTodosOptions = {}) {
 
   useEffect(() => {
     if (!enabled) {
-      setTodos([]);
-      setError(null);
-      setIsLoading(false);
       return;
     }
 
     // Initial data hydration on mount.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    void loadTodos(false);
+    const timeoutId = setTimeout(() => {
+      void loadTodos(false);
+    }, 0);
+
+    return () => {
+      clearTimeout(timeoutId);
+    };
   }, [enabled, loadTodos]);
 
   const addTodo = useCallback(async (title: string) => {

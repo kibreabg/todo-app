@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   Alert,
   Box,
@@ -33,15 +33,8 @@ export function AuthPanel({
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [userName, setUserName] = useState("");
-  const [isErrorNotificationOpen, setIsErrorNotificationOpen] = useState(false);
 
   const canSubmit = email.trim().length > 0 && password.trim().length > 0;
-
-  useEffect(() => {
-    if (error) {
-      setIsErrorNotificationOpen(true);
-    }
-  }, [error]);
 
   const handleSubmit = async () => {
     if (!canSubmit || isSubmitting) {
@@ -141,19 +134,16 @@ export function AuthPanel({
       </Stack>
 
       <Snackbar
-        open={isErrorNotificationOpen && Boolean(error)}
+        open={Boolean(error)}
         autoHideDuration={6000}
         onClose={(_, reason) => {
           if (reason === "clickaway") {
             return;
           }
-
-          setIsErrorNotificationOpen(false);
         }}
         anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
       >
         <Alert
-          onClose={() => setIsErrorNotificationOpen(false)}
           severity="error"
           variant="filled"
           sx={{ width: "100%" }}

@@ -38,9 +38,33 @@ export function useAuth() {
     }
   }, []);
 
+  const bootstrapOnMount = useCallback(async () => {
+    // Initial hydration starts from isLoading=true, so avoid a sync state update in effects.
+    try {
+      const me = await getCurrentUser();
+      setUser(me);
+      setError(null);
+    } catch (bootstrapError) {
+      const message =
+        bootstrapError instanceof Error
+          ? bootstrapError.message
+          : "Failed to initialize auth session.";
+      setError(message);
+      setUser(null);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
-    void bootstrap();
-  }, [bootstrap]);
+    const timeoutId = setTimeout(() => {
+      void bootstrapOnMount();
+    }, 0);
+
+    return () => {
+      clearTimeout(timeoutId);
+    };
+  }, [bootstrapOnMount]);
 
   const login = useCallback(async (payload: LoginPayload) => {
     setIsSubmitting(true);

@@ -51,8 +51,8 @@ jobs:
       - name: Restore solution
         run: dotnet restore todo-app.sln
 
-      - name: Build backend
-        run: dotnet build todo-backend/todo-backend.csproj --configuration Release --no-restore
+      - name: Build backend and tests
+        run: dotnet build todo-app.sln --configuration Release --no-restore
 
       - name: Test backend with coverage
         run: dotnet test todo-app.sln --configuration Release --no-build --collect:"XPlat Code Coverage" --results-directory ./TestResults

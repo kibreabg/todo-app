@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useMemo, useState } from "react";
 import {
   Box,
   Button,
@@ -34,11 +34,10 @@ export function TodoItem({
 }: Readonly<TodoItemProps>) {
   const [isEditing, setIsEditing] = useState(false);
   const [editTitle, setEditTitle] = useState(todo.title);
-  const [updatedAtLabel, setUpdatedAtLabel] = useState("");
-
-  useEffect(() => {
-    setUpdatedAtLabel(new Date(todo.updatedAt).toLocaleString());
-  }, [todo.updatedAt]);
+  const updatedAtLabel = useMemo(
+    () => new Date(todo.updatedAt).toLocaleString(),
+    [todo.updatedAt],
+  );
 
   const handleSave = async (event: FormSubmitEvent) => {
     event.preventDefault();
@@ -135,7 +134,7 @@ export function TodoItem({
                   {todo.title}
                 </Typography>
                 <Typography variant="caption" color="text.secondary">
-                  Updated {updatedAtLabel || "..."}
+                  Updated {updatedAtLabel}
                 </Typography>
               </>
             )}
